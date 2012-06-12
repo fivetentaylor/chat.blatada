@@ -1,0 +1,7 @@
+Intall dependencies:
+$ npm install -d
+
+To Run:
+$ node server.js
+
+Open a few tabs in web browser to http://0.0.0.0:8000 and go schizo
