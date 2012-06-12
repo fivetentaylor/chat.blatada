@@ -1,53 +1,80 @@
-/* Require dependencies */
-var app = require('http').createServer(handler)
-, fs = require('fs')
-, io = require('socket.io').listen(app);
- 
-/* creating the server ( localhost:8000 ) */
-app.listen(8000);
- 
-/* on server started we can load our client.html page */
-function handler(req, res) {
-    fs.readFile(__dirname + '/client.html', function(err, data) {
-		if(err) {
-			console.log(err);
-			res.writeHead(500);
-			return res.end('Error loading client.html');
-		}
-		res.writeHead(200);
-		res.end(data);
-    });
-}
- 
-/* creating a new websocket to keep the content updated without any AJAX request */
-io.sockets.on('connection', function(socket) {
- 
-    socket.on('set username', function(username) {
-    /* Save a variable 'username' */
-	socket.set('username', username, function() {
-	    console.log('Connect', username);
-	    var connected_msg = '<b>' + username + ' is now connected.</b>';
- 
-	    io.sockets.volatile.emit('broadcast_msg', connected_msg);
-	});
-    });
+/**
+ * Module dependencies.
+ */
 
-    socket.on('emit_msg', function (msg) {
-		/* Get the variable 'username' */
-		socket.get('username', function (err, username) {
-			console.log('Chat message by', username);
-			io.sockets.volatile.emit( 'broadcast_msg' , username + ': ' + msg );
-		});
-    });
- 
-  /* Handle disconnection of clients */
-    socket.on('disconnect', function () {
-		socket.get('username', function (err, username) {
-			console.log('Disconnect', username);
-		  var disconnected_msg = '<b>' + username + ' has disconnected.</b>'
-	 
-		  // Broadcast to all users the disconnection message
-			io.sockets.volatile.emit( 'broadcast_msg' , disconnected_msg);
-		});
-    });
+var express = require('express')
+  , stylus = require('stylus')
+  , nib = require('nib')
+  , sio = require('socket.io');
+
+/**
+ * App.
+ */
+
+var app = express.createServer();
+
+/**
+ * App configuration.
+ */
+
+app.configure(function () {
+  app.use(stylus.middleware({ src: __dirname + '/public', compile: compile }));
+  app.use(express.static(__dirname + '/public'));
+  app.set('views', __dirname);
+  app.set('view engine', 'jade');
+
+  function compile (str, path) {
+    return stylus(str)
+      .set('filename', path)
+      .use(nib());
+  };
+});
+
+/**
+ * App routes.
+ */
+
+app.get('/', function (req, res) {
+  res.render('client', { layout: false });
+});
+
+/**
+ * App listen.
+ */
+
+app.listen(8000, function () {
+  var addr = app.address();
+  console.log('   app listening on http://' + addr.address + ':' + addr.port);
+});
+
+/**
+ * Socket.IO server (single process only)
+ */
+
+var io = sio.listen(app)
+  , nicknames = {};
+
+io.sockets.on('connection', function (socket) {
+  socket.on('user message', function (msg) {
+    socket.broadcast.emit('user message', socket.nickname, msg);
+  });
+
+  socket.on('nickname', function (nick, fn) {
+    if (nicknames[nick]) {
+      fn(true);
+    } else {
+      fn(false);
+      nicknames[nick] = socket.nickname = nick;
+      socket.broadcast.emit('announcement', nick + ' connected');
+      io.sockets.emit('nicknames', nicknames);
+    }
+  });
+
+  socket.on('disconnect', function () {
+    if (!socket.nickname) return;
+
+    delete nicknames[socket.nickname];
+    socket.broadcast.emit('announcement', socket.nickname + ' disconnected');
+    socket.broadcast.emit('nicknames', nicknames);
+  });
 });
