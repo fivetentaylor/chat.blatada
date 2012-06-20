@@ -1,6 +1,6 @@
 {
     "name": "blatada-chat"
-  , "description": "chat application"
+  , "description": "websocket multi-user chat application"
   , "version": "0.0.3"
   , "dependencies": {
         "express": "2.5.5"
