@@ -1,11 +1,43 @@
+/*
+ * This can eventually be parceled out to other storage mechanisms
+ * Eventually this will be the interface to our uuid tree storage mechanism
+ */
+var Uuids = function(){
+	this.ids = {};
+};
+Uuids.prototype.add = function( uuid, socket )
+{
+    this.ids[uuid] = socket;
+};
+Uuids.prototype.remove = function( uuid )
+{
+    delete this.ids[uuid];
+};
+Uuids.prototype.find = function( uuids )
+{
+    var sockets = [];
+    var ids = this.ids;
+    uuids.forEach(function(uuid){
+    	var temp = ids[uuid];
+        if(temp) sockets.push( temp );
+    });
+    return sockets;
+};
+
+
+
 /**
  * Module dependencies.
  */
 
-var express = require('express')
-  , stylus = require('stylus')
-  , nib = require('nib')
-  , sio = require('socket.io');
+var express = require('express');
+var sio = require('socket.io');
+
+/*
+ * GLOBAL STORAGE
+ */
+ 
+var uuids = new Uuids();
 
 /**
  * App.
@@ -18,16 +50,8 @@ var app = express.createServer();
  */
 
 app.configure(function () {
-  app.use(stylus.middleware({ src: __dirname + '/public', compile: compile }));
-  app.use(express.static(__dirname + '/public'));
-  app.set('views', __dirname);
-  app.set('view engine', 'jade');
-
-  function compile (str, path) {
-    return stylus(str)
-      .set('filename', path)
-      .use(nib());
-  };
+	app.use(app.router);
+  	app.use(express.static(__dirname + '/public'));
 });
 
 /**
@@ -35,7 +59,9 @@ app.configure(function () {
  */
 
 app.get('/', function (req, res) {
-  res.render('client', { layout: false });
+	if( req.query.uuid ) uuids.add( req.query.uuid );
+  	res.sendfile('/index.html');
+  	res.socket.query = req.query;
 });
 
 /**
@@ -51,30 +77,11 @@ app.listen(8000, function () {
  * Socket.IO server (single process only)
  */
 
-var io = sio.listen(app)
-  , nicknames = {};
+var io = sio.listen(app);
 
 io.sockets.on('connection', function (socket) {
-  socket.on('user message', function (msg) {
-    socket.broadcast.emit('user message', socket.nickname, msg);
-  });
-
-  socket.on('nickname', function (nick, fn) {
-    if (nicknames[nick]) {
-      fn(true);
-    } else {
-      fn(false);
-      nicknames[nick] = socket.nickname = nick;
-      socket.broadcast.emit('announcement', nick + ' connected');
-      io.sockets.emit('nicknames', nicknames);
-    }
-  });
-
-  socket.on('disconnect', function () {
-    if (!socket.nickname) return;
-
-    delete nicknames[socket.nickname];
-    socket.broadcast.emit('announcement', socket.nickname + ' disconnected');
-    socket.broadcast.emit('nicknames', nicknames);
-  });
+	console.log( 'new connection' );
+	socket.on('disconnect', function () {
+		console.log( 'disconnected' );
+  	});
 });

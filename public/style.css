@@ -1,0 +1,17 @@
+/* 
+    Document   : style2
+    Created on : Jun 18, 2012, 1:16:48 PM
+    Author     : taylorsather
+    Description:
+        Purpose of the stylesheet follows.
+*/
+
+root { 
+    display: block;
+}
+
+
+#send-message
+{
+    border: solid red;
+}
