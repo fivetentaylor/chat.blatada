@@ -41,40 +41,31 @@ Storage.prototype.find = function( uuids )
     	throw new TypeError( 'parameter uuids should be an array of uuid strings' );
 };
 
-/*
- * GLOBAL STORAGE
- */
- 
-var uuids = new Storage();
-var chats = new Storage();
-
 /**
  * App.
  */
-
 var app = express.createServer();
 
 /**
  * App configuration.
  */
-
 app.configure(function () {
 	app.use(app.router);
   	app.use(express.static(__dirname + '/public'));
 });
 
+
 /**
  * App routes.
  */
-
 app.get('/', function (req, res) {
   	res.sendfile('/index.html');
 });
 
+
 /**
  * App listen.
  */
-
 app.listen(8000, function () {
   var addr = app.address();
   console.log('   app listening on http://' + addr.address + ':' + addr.port);
