@@ -83,6 +83,34 @@ app.listen(8000, function () {
 /**
  * Socket.IO server (single process only)
  */
+ 
+/*
+ * GLOBAL STORAGE
+ */
+ 
+var users = new Storage();
+var chats = new Storage();
+ 
+/*
+ * Class: Chat
+ */
+var Chat = function( uuids ){
+	// Static pointer to the users
+	Chat.users = users;
+	// This will fetch all the necessary sockets
+	this.users = Chat.users.find( uuids );
+	this.id = uuidgen.v1();
+};
+Chat.prototype.message = function( sender_id, data )
+{
+	this.users.forEach(function( user ){
+		// user.data is a socket in this case, while
+		// the parameter data is whatever the client sent
+    	if(user.id != sender_id) user.data.send( data );
+	});
+};
+
+
 
 var io = sio.listen(app);
 
