@@ -40,20 +40,12 @@ Storage.prototype.find = function( uuids )
     	throw new TypeError( 'parameter uuids should be an array of uuid strings' );
 };
 
-
-
-/**
- * Module dependencies.
- */
-
-var express = require('express');
-var sio = require('socket.io');
-
 /*
  * GLOBAL STORAGE
  */
  
-var uuids = new Uuids();
+var uuids = new Storage();
+var chats = new Storage();
 
 /**
  * App.
