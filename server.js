@@ -1,27 +1,34 @@
 /*
  * This can eventually be parceled out to other storage mechanisms
  * Eventually this will be the interface to our uuid tree storage mechanism
+ *
+ * Class: Storage
  */
-var Uuids = function(){
+var Storage = function(){
 	this.ids = {};
 };
-Uuids.prototype.add = function( uuid, socket )
+Storage.prototype.add = function( uuid, data )
 {
-    this.ids[uuid] = socket;
+    this.ids[uuid] = data;
 };
-Uuids.prototype.remove = function( uuid )
+Storage.prototype.remove = function( uuid )
 {
-    delete this.ids[uuid];
+   	delete this.ids[uuid];
 };
-Uuids.prototype.find = function( uuids )
+Storage.prototype.find = function( uuids )
 {
-    var sockets = [];
-    var ids = this.ids;
-    uuids.forEach(function(uuid){
-    	var temp = ids[uuid];
-        if(temp) sockets.push( temp );
-    });
-    return sockets;
+	if( util.isArray(uuids) )
+	{
+    	var datum = [];
+    	var ids = this.ids;
+    	uuids.forEach(function( uuid ){
+    		var temp = ids[uuid];
+        	if(temp) datum.push(temp);
+   	 	});
+    	return datum;
+    }
+    else
+    	throw new TypeError( 'parameter uuids should be an array of uuid strings' );
 };
 
 
