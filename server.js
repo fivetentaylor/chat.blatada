@@ -8,33 +8,34 @@ var uuidgen = require('node-uuid');
 var util = require('util');
 
 /*
+ * Class: Storage
+ *
  * This can eventually be parceled out to other storage mechanisms
  * Eventually this will be the interface to our uuid tree storage mechanism
- *
- * Class: Storage
+ * Or possibly a cool asynchronous c implementation of a tree to boost performance
+ * even more.
  */
 var Storage = function(){
-	this.ids = {};
+	this.data = {};
 };
-Storage.prototype.add = function( uuid, data )
+Storage.prototype.add = function( uuid, datum )
 {
-    this.ids[uuid] = data;
+    this.data[uuid] = datum;
 };
 Storage.prototype.remove = function( uuid )
 {
-   	delete this.ids[uuid];
+   	delete this.data[uuid];
 };
 Storage.prototype.find = function( uuids )
 {
 	if( util.isArray(uuids) )
 	{
-    	var datum = [];
-    	var ids = this.ids;
+    	var data = [];
+    	var that = this.data;
     	uuids.forEach(function( uuid ){
-    		var temp = ids[uuid];
-        	if(temp) datum.push(temp);
+        	if(that[uuid]) data.push({id:uuid,data:that[uuid]});
    	 	});
-    	return datum;
+    	return data;
     }
     else
     	throw new TypeError( 'parameter uuids should be an array of uuid strings' );
