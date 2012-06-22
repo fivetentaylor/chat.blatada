@@ -85,9 +85,25 @@ app.listen(8000, function () {
 
 var io = sio.listen(app);
 
-io.sockets.on('connection', function (socket) {
+io.sockets.on('connection', function( socket ){
 	console.log( 'new connection' );
-	socket.on('disconnect', function () {
+	socket.on( 'startChat', function( data ){
+		if( data.my_uuid && data.their_uuids ) 
+		{
+			// Add user uuid to socket for reverse lookup
+			socket.uuid = data.my_uuid;
+			// Add uuid and socket to global storage for other users to lookup
+			uuids.add( data.my_uuid, socket );	
+			// Create Chat Session
+			var chatId = uuidgen.v1();
+			
+		}		
+		socket.emit( 'chatReady' );
+	});
+	socket.on( 'message', function( message ){
+		
+	});
+	socket.on( 'disconnect', function () {
 		console.log( 'disconnected' );
   	});
 });
