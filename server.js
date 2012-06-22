@@ -67,9 +67,7 @@ app.configure(function () {
  */
 
 app.get('/', function (req, res) {
-	if( req.query.uuid ) uuids.add( req.query.uuid );
   	res.sendfile('/index.html');
-  	res.socket.query = req.query;
 });
 
 /**
