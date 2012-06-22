@@ -116,21 +116,23 @@ var io = sio.listen(app);
 
 io.sockets.on('connection', function( socket ){
 	console.log( 'new connection' );
+	socket.chat_ids = [];
 	socket.on( 'startChat', function( data ){
-		if( data.my_uuid && data.their_uuids ) 
+		if( data.my_id && data.their_ids ) 
 		{
-			// Add user uuid to socket for reverse lookup
-			socket.uuid = data.my_uuid;
+			var chat = new Chat( users
+			// Add user and chat uuid to socket for reverse lookup on disconnect
+			socket.user_id = data.my_id;
+			socket.chat_ids.push
 			// Add uuid and socket to global storage for other users to lookup
-			uuids.add( data.my_uuid, socket );	
+			users.add( data.my_id, socket );	
 			// Create Chat Session
-			var chatId = uuidgen.v1();
-			
+			socket.emit( 'chatReady' );
 		}		
-		socket.emit( 'chatReady' );
 	});
-	socket.on( 'message', function( message ){
-		
+	socket.on( 'message', function( data ){
+		var chat = chats.find( data.chat_id );
+		chat.message( data.my_id, data.message );
 	});
 	socket.on( 'disconnect', function () {
 		console.log( 'disconnected' );
