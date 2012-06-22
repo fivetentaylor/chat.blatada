@@ -1,3 +1,12 @@
+/**
+ * Module dependencies.
+ */
+
+var express = require('express');
+var sio = require('socket.io');
+var uuidgen = require('node-uuid');
+var util = require('util');
+
 /*
  * This can eventually be parceled out to other storage mechanisms
  * Eventually this will be the interface to our uuid tree storage mechanism
