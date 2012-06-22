@@ -11,7 +11,6 @@
             var socket = io.connect();
 
             socket.on('connect', function () {
-            	socket.send( 'hello world' );
                 socket.on('message', function (message) { 
                 	console.log( message );
                 });
@@ -20,9 +19,27 @@
   				});
             });
             
+            function startChat( my_uuid, their_uuids )
+            {
+            	socket.emit( 'startChat', { 'my_uuid' : my_uuid, 'their_uuids' : their_uuids } );
+            	socket.on( 'chatReady' , function(){
+            		alert( "you're chatting bitch!" );
+            	});
+            }
+            
+            function endChat( chat_id )
+            {
+            	
+            }
+            
+            function message( chat_id, type, content )
+            {
+            	
+            }
+            
         </script>
     </head>
     <body>
-        <button id="send-message" name="send">send</button><input type="text"/>
+        <button id="send-message" name="send" onclick="startChat(1,1)">send</button><input type="text"/>
     </body>
 </html>
