@@ -88,22 +88,30 @@ var chats = new Storage();
 /*
  * Class: Chat
  */
-var Chat = function( uuids ){
+var Chat = function( user_ids ){
 	// Static pointer to the users
 	Chat.users = users;
+	this.user_ids = user_ids;
 	// This will fetch all the necessary sockets
-	this.users = Chat.users.find( uuids );
+	this.users = Chat.users.find( user_ids );
 	this.id = uuidgen.v1();
 };
 Chat.prototype.message = function( sender_id, data )
 {
 	this.users.forEach(function( user ){
 		// user.data is a socket in this case, while
-		// the parameter data is whatever the client sent
-    	if(user.id != sender_id) user.data.send( data );
+		// the parameter 'data' is whatever the client sent
+    	if(user.id != sender_id) user.value.emit( 'message', data );
 	});
 };
-
+Chat.prototype.emit = function( event, sender_id, data )
+{
+	this.users.forEach(function( user ){
+		// user.data is a socket in this case, while
+		// the parameter 'data' is whatever the client sent
+    	if(user.id != sender_id) user.value.emit( event, data );
+	});
+};
 
 
 var io = sio.listen(app);
@@ -111,21 +119,22 @@ var io = sio.listen(app);
 io.sockets.on('connection', function( socket ){
 	console.log( 'new connection' );
 	socket.chat_ids = [];
-	socket.on( 'startChat', function( data ){
+	socket.on( 'start', function( data ){
 		if( data.my_id && data.their_ids ) 
 		{
-			var chat = new Chat( users
+			var chat = new Chat( data.their_ids.concat(data.my_id) );
 			// Add user and chat uuid to socket for reverse lookup on disconnect
 			socket.user_id = data.my_id;
-			socket.chat_ids.push
+			socket.chat_ids.push( chat.id );
 			// Add uuid and socket to global storage for other users to lookup
-			users.add( data.my_id, socket );	
+			users.add( data.my_id, socket );
+			chats.add( chat.id, chat );	
 			// Create Chat Session
-			socket.emit( 'chatReady' );
-		}		
+			chat.emit( 'new', { 'user_id' : socket.user_id, 'chat_id' : chat.id } );
+		}
 	});
-	socket.on( 'message', function( data ){
-		var chat = chats.find( data.chat_id );
+	socket.on( 'data', function( data ){
+		var chat = chats.find( data.chat_id ).value;
 		chat.message( data.my_id, data.message );
 	});
 	socket.on( 'disconnect', function () {
