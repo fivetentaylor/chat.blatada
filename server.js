@@ -35,7 +35,7 @@ Storage.prototype.find = function( uuids )
     	var data = [];
     	var that = this.data;
     	uuids.forEach(function( uuid ){
-        	if(that[uuid]) data.push({id:uuid,data:that[uuid]});
+        	if(that[uuid]) data.push({id:uuid,value:that[uuid]});
    	 	});
     	return data;
     }
@@ -46,32 +46,33 @@ Storage.prototype.find = function( uuids )
 /**
  * App.
  */
-var app = express.createServer();
+var app = http.createServer(handler);
 
-/**
- * App configuration.
- */
-app.configure(function () {
-	app.use(app.router);
-  	app.use(express.static(__dirname + '/public'));
-});
+function handler (req, res) {
+	fs.readFile(__dirname + '/node_modules/socket.io/node_modules/socket.io-client/dist/socket.io.min.js',
+	function( err, data) {
+		if (err) {
+      		res.writeHead(500);
+      		return res.end('Error loading socket');
+    	}
+		var data1 = data;
+  		fs.readFile(__dirname + '/public/socket.js',
+  		function (err, data) {
+  			var data2 = data;
+    		if (err) {
+      			res.writeHead(500);
+      			return res.end('Error loading socket');
+    		}
+    		var dataFin = data1 + "\nvar chatHost = "http:\/\/127.0.0.1:8000" + "');\n" + data2;
+    		res.writeHead(200, {
+  				'Content-Length': dataFin.length,
+  				'Content-Type': 'text/javascript' });
+    		res.end( dataFin );
+  		});
+  	});
+}
 
-
-/**
- * App routes.
- */
-app.get('/', function (req, res) {
-  	res.sendfile('/index.html');
-});
-
-
-/**
- * App listen.
- */
-app.listen(8000, function () {
-  var addr = app.address();
-  console.log('   app listening on http://' + addr.address + ':' + addr.port);
-});
+app.listen(8000);
 
 /**
  * Socket.IO server (single process only)
