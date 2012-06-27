@@ -20,9 +20,9 @@ var util = require('util');
 var Storage = function(){
 	this.data = {};
 };
-Storage.prototype.add = function( uuid, datum )
+Storage.prototype.add = function( uuid, value )
 {
-    this.data[uuid] = datum;
+    this.data[uuid] = value;
 };
 Storage.prototype.remove = function( uuid )
 {
